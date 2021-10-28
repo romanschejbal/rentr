@@ -9,9 +9,12 @@ use notify::{
     event::{Event, EventKind, ModifyKind},
     RecommendedWatcher, RecursiveMode, Result, Watcher,
 };
-use std::io::{self, Read};
 use std::process::{Child, Command, Stdio};
 use std::sync::{mpsc::channel, Mutex};
+use std::{
+    io::{self, Read},
+    path::Path,
+};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -43,14 +46,14 @@ fn main() -> Result<()> {
 
     let (tx, rx) = channel();
 
-    let mut watcher: RecommendedWatcher = Watcher::new_immediate(move |res| {
+    let mut watcher: RecommendedWatcher = notify::recommended_watcher(move |res| {
         tx.send(res).unwrap();
     })?;
 
     let paths_to_watch = read_paths_to_watch();
     paths_to_watch.iter().for_each(|path| {
         watcher
-            .watch(path, RecursiveMode::Recursive)
+            .watch(Path::new(path), RecursiveMode::Recursive)
             .expect(&format!("Couldn't set a watch for {}", path));
     });
 
