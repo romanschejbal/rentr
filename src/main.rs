@@ -28,11 +28,8 @@ struct Opt {
     #[structopt(short, long)]
     reset: bool,
 
-    /// Command to run.
-    command: String,
-
     /// Optional number of arguments for provided command.
-    args: Vec<String>,
+    command: Vec<String>,
 }
 
 /// Main program
@@ -43,7 +40,7 @@ fn main() -> Result<()> {
         clear_screen();
     }
 
-    let mut command = make_command(&opt.command, &opt.args);
+    let mut command = make_command(&opt.command);
 
     let command_process = Mutex::new(command.spawn());
 
@@ -101,12 +98,18 @@ fn clear_screen() {
 }
 
 /// Creates the provided command
-fn make_command(command: &String, args: &Vec<String>) -> Command {
-    let mut cmd = Command::new(&command);
+fn make_command(command: &Vec<String>) -> Command {
+    let mut cmd = if cfg!(target_os = "windows") {
+        let mut c = Command::new("cmd");
+        c.arg("/C");
+        c
+    } else {
+        let mut c = Command::new("sh");
+        c.arg("-c");
+        c
+    };
     cmd.stdout(Stdio::inherit());
     cmd.stderr(Stdio::inherit());
-    args.iter().for_each(|arg| {
-        cmd.arg(arg);
-    });
+    cmd.arg(command.join(" "));
     cmd
 }
