@@ -42,7 +42,10 @@ fn main() -> Result<()> {
     if opt.clear {
         clear_screen();
     }
-    let command_process = Mutex::new(run_command(&opt.command, &opt.args));
+
+    let mut command = make_command(&opt.command, &opt.args);
+
+    let command_process = Mutex::new(command.spawn());
 
     let (tx, rx) = channel();
 
@@ -70,7 +73,7 @@ fn main() -> Result<()> {
                 if opt.clear {
                     clear_screen();
                 }
-                *proc_result = run_command(&opt.command, &opt.args);
+                *proc_result = command.spawn();
             }
             Err(error) => println!("Error: {:?}", error),
             _ => (),
@@ -97,13 +100,13 @@ fn clear_screen() {
         .output();
 }
 
-/// Runs the provided command
-fn run_command(command: &String, args: &Vec<String>) -> std::io::Result<Child> {
+/// Creates the provided command
+fn make_command(command: &String, args: &Vec<String>) -> Command {
     let mut cmd = Command::new(&command);
     cmd.stdout(Stdio::inherit());
     cmd.stderr(Stdio::inherit());
     args.iter().for_each(|arg| {
         cmd.arg(arg);
     });
-    cmd.spawn()
+    cmd
 }
