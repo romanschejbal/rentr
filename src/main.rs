@@ -9,7 +9,7 @@ use notify::{
     event::{Event, EventKind, ModifyKind},
     RecommendedWatcher, RecursiveMode, Result, Watcher,
 };
-use std::process::{Child, Command, Stdio};
+use std::process::{Command, Stdio};
 use std::sync::{mpsc::channel, Mutex};
 use std::{
     io::{self, Read},
